@@ -1,0 +1,532 @@
+{
+  "name": "Cold Email Automation",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1120,
+        128
+      ],
+      "id": "4948c919-8291-4fcc-acf3-0988289b9756",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "13Iu3bdcfSK_KBMDpn2_iK99UAH-QtEGtVTmQH_Vviqw",
+          "mode": "list",
+          "cachedResultName": "Leads Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13Iu3bdcfSK_KBMDpn2_iK99UAH-QtEGtVTmQH_Vviqw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13Iu3bdcfSK_KBMDpn2_iK99UAH-QtEGtVTmQH_Vviqw/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -896,
+        128
+      ],
+      "id": "7b781440-f27e-489d-a456-9ecacfd9ec3d",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "35LZVY4ajVNIpgJs",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -672,
+        128
+      ],
+      "id": "dedb8d29-30e1-458b-a95b-66c2fc06dc43",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "164e95fa-3f46-4a00-8bc9-9a07a8bc845c",
+              "leftValue": "={{ $json.Email }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "7fd35fd4-4952-4b4e-b99b-845492df4c0e",
+              "leftValue": "={{ $json['First Name'] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -448,
+        144
+      ],
+      "id": "300c6c15-03de-4c0d-86bb-54e4d6cc4dcf",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "You are an AI Sales Assistant.\n\nThe input contains EXACTLY ONE lead.\n\nAvailable fields:\n- First Name\n- Last Name\n- Title\n- Company\n- Email\n- row_number\n\nYour workflow MUST be:\n\nSTEP 1\nGenerate one personalized, professional cold email for this lead.\n\nSTEP 2\nCall the \"Send Cold Email\" tool EXACTLY ONE TIME.\n- Use only the parameters defined in the tool schema.\n- Do not create, rename, or omit parameters.\n- Do not call this tool more than once.\n- If the tool succeeds, continue immediately.\n\nSTEP 3\nCall the \"Mark Email as Sent\" tool EXACTLY ONE TIME.\n- Use only the parameters defined in the tool schema.\n- Use the current lead's row_number to update the correct row.\n- Set the Email Sent value to SUCCESS.\n- Do not call this tool more than once.\n\nRules:\n- Process ONLY the current lead.\n- Never ask the user for more information.\n- Never wait for confirmation.\n- Never retry a successful tool call.\n- Never call the same tool twice.\n- Never generate multiple emails.\n- Never return the email text if both tools succeed.\n- If a tool fails, stop immediately and return only the error.\n- The workflow ends immediately after both tools have been called successfully.\n\nRequired execution order:\n\n1. Generate email\n2. Call \"Send Cold Email\" exactly once\n3. Wait for success\n4. Call \"Mark Email as Sent\" exactly once\n5. Stop",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -192,
+        -144
+      ],
+      "id": "c1cdcd1a-adfb-40ac-86de-da4c0f38f2b8",
+      "name": "AI Agent",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "content": "##  Why We Pin Data\nThe data is pinned so that so don't have to call the google sheet again and again.\nBut when finally runing the workflow unpin it.",
+        "height": 224,
+        "width": 256
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -960,
+        -128
+      ],
+      "typeVersion": 1,
+      "id": "114d759c-517a-4730-8224-4aeb83947060",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.Email }}",
+        "subject": "Quick question regarding ",
+        "emailType": "text",
+        "message": "=Hi {{ $json[\"First Name\"] }},  I’ve been following {{ $json.Company }} and was impressed by your recent focus on the {{ $json.Title }} role. I’m reaching out because I help companies like yours streamline their operations and save time on repetitive tasks.  Would you be open to a 5-minute chat next week to see if this could be a fit for your team?\nBest regards,\nArsal Baig",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        -64,
+        128
+      ],
+      "id": "284adc1c-d96d-430c-9a5b-79324abd49a7",
+      "name": "Send Cold Email",
+      "webhookId": "f6cb06ff-dac9-43e6-a03c-28732c31c4e4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "tNcoApFw5YFmhCH7",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        128
+      ],
+      "id": "d783c668-f352-4316-bc3b-1b659cf72e47",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "iMgZ6qHCuJjE9kGU",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "13Iu3bdcfSK_KBMDpn2_iK99UAH-QtEGtVTmQH_Vviqw",
+          "mode": "list",
+          "cachedResultName": "Leads Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13Iu3bdcfSK_KBMDpn2_iK99UAH-QtEGtVTmQH_Vviqw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13Iu3bdcfSK_KBMDpn2_iK99UAH-QtEGtVTmQH_Vviqw/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Email Sent": "SUCCESS",
+            "row_number": "={{ $json.row_number }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "First Name",
+              "displayName": "First Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Last Name",
+              "displayName": "Last Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email Sent",
+              "displayName": "Email Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        96,
+        112
+      ],
+      "id": "17a5ecc6-6f40-425d-844d-54f9a46d3f6c",
+      "name": "Mark Email as Sent",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "35LZVY4ajVNIpgJs",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "13Iu3bdcfSK_KBMDpn2_iK99UAH-QtEGtVTmQH_Vviqw",
+          "mode": "list",
+          "cachedResultName": "Leads Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13Iu3bdcfSK_KBMDpn2_iK99UAH-QtEGtVTmQH_Vviqw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13Iu3bdcfSK_KBMDpn2_iK99UAH-QtEGtVTmQH_Vviqw/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $json.row_number }}",
+            "Email Sent": "FAILED"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "First Name",
+              "displayName": "First Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Last Name",
+              "displayName": "Last Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email Sent",
+              "displayName": "Email Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -160,
+        320
+      ],
+      "id": "001d0fda-5717-4a6e-89b5-479f40c443f3",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "35LZVY4ajVNIpgJs",
+          "name": "Google Sheets account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Cold Email": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Email as Sent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "9ac03d77-139f-4683-8bfb-5bdd5cc840b8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b4ae809003743579456a30588448f269f5e9738029f7fef6ae7921965392c067"
+  },
+  "nodeGroups": [],
+  "id": "zWewFfXEunIhSFpP",
+  "tags": []
+}
