@@ -1,0 +1,1009 @@
+{
+  "name": "Google Maps Lead Gen",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Google Maps Lead Generator",
+        "formDescription": "Enter the business category and location to find leads from Google Maps.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Bussiness Category",
+              "placeholder": "Cafe, Restaurant, Dentist, Gym",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Location",
+              "placeholder": "Johar Town, Lahore",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -2240,
+        -112
+      ],
+      "id": "8f2dd5de-6216-4aa3-a887-834cec282bf4",
+      "name": "On form submission",
+      "webhookId": "320ecdee-a41d-4919-91de-c4de2605c21b"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "places",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -1792,
+        -112
+      ],
+      "id": "0a043cf5-60ea-4334-8bb6-e9e805e5e9e6",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3d589784-e479-4237-8105-5efde61c8328",
+              "name": "Bussiness Name",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "b58c2bdd-ba6f-4d49-b7f4-98908e1f7a30",
+              "name": "Address",
+              "value": "={{ $json.address || $json.vicinity || $json.formatted_address || \"Address Not Available\" }}",
+              "type": "string"
+            },
+            {
+              "id": "16ca858a-ff31-4f96-abc2-ba3d67f456cc",
+              "name": "Latitude",
+              "value": "={{ $json.latitude }}",
+              "type": "number"
+            },
+            {
+              "id": "216587c2-4a8d-4b4e-a8ed-79c8765f0a6b",
+              "name": "Longitutde",
+              "value": "={{ $json.longitude }}",
+              "type": "number"
+            },
+            {
+              "id": "967e9bf4-cfb2-460a-9eb8-bf5e9d9b1b7f",
+              "name": "Rating",
+              "value": "={{ $json.rating }}",
+              "type": "number"
+            },
+            {
+              "id": "5bd21338-c804-446a-a91b-9985526180f5",
+              "name": "Reviews",
+              "value": "={{ $json.ratingCount }}",
+              "type": "number"
+            },
+            {
+              "id": "c797c459-5137-4e4d-af1b-fa7d8f99d345",
+              "name": "Price Level",
+              "value": "={{ $json.priceLevel || \"Not Available\" }}",
+              "type": "string"
+            },
+            {
+              "id": "71794a66-6d47-4607-a456-67bc56cba5b5",
+              "name": "Type",
+              "value": "={{ $json.type }}",
+              "type": "string"
+            },
+            {
+              "id": "ed538907-2305-442f-9c12-57dcae6875cb",
+              "name": "Ph Number",
+              "value": "={{ $json.phoneNumber ? (\"'\" + $json.phoneNumber) : \"Not Available\" }}",
+              "type": "string"
+            },
+            {
+              "id": "1bbbff34-027f-44bb-88df-456cd4930e67",
+              "name": "Website",
+              "value": "={{ $json.website }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1568,
+        -112
+      ],
+      "id": "d157169d-276d-4632-bf45-d57a7c32b399",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://google.serper.dev/maps",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-API-KEY",
+              "value": "5387447065fd61a16171454b9f805605b8e74a2c"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $json['Bussiness Category'] }} in {{ $json.Location }}"
+            },
+            {
+              "name": "num",
+              "value": "35"
+            }
+          ]
+        },
+        "options": {
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -2016,
+        -112
+      ],
+      "id": "99a483fb-52e3-4c02-870f-81430df3ba87",
+      "name": "Serper API",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "46e87fb0-6784-4782-b13a-c79c538616d8",
+              "leftValue": "={{ $json.Website }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1344,
+        -112
+      ],
+      "id": "b51d0d04-ac94-4d2b-9a1c-75a0518da02a",
+      "name": "Has Website?"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.Website }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36'"
+            },
+            {
+              "name": "Accept",
+              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.5"
+            },
+            {
+              "name": "Referer",
+              "value": "https://www.google.com/"
+            },
+            {
+              "name": "Accept-Encoding",
+              "value": "gzip, deflate"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -2240,
+        208
+      ],
+      "id": "d84011fb-5bbd-4b9c-8db5-76177d0c2564",
+      "name": "Scrape Business Website",
+      "executeOnce": false,
+      "retryOnFail": true,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Get HTML from previous node\nconst htmlContent = $json.data || '';\n\n// Extract emails using regex\nconst emailRegex = /[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}/g;\nconst emails = htmlContent.match(emailRegex) || [];\n\n// Remove duplicates\nconst uniqueEmails = [...new Set(emails)];\n\n// Filter junk emails\nconst filtered = uniqueEmails.filter(email => {\n  const junk = ['.png', '.jpg', '.gif', '@4x-', '@2x-', '@3x-', 'noreply@', 'no-reply@', 'test@', 'example@'];\n  return !junk.some(j => email.toLowerCase().includes(j));\n});\n\n// Return result\nreturn {\n  email: filtered[0] || null,\n  all_emails: filtered,\n  email_count: filtered.length,\n  email_found: filtered.length > 0\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2016,
+        208
+      ],
+      "id": "953a0a06-9bd5-43e4-9e74-5a3fdd3ba9d9",
+      "name": "Extract Emails"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c3eb25ad-8bbd-41f4-9157-0a3677f0395d",
+              "leftValue": "={{ $json.email_found }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1792,
+        208
+      ],
+      "id": "5dfdb99b-6b1d-49b6-8d05-96656400256e",
+      "name": "Email Found?"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "=Quick Question - {{ $('Has Website?').item.json['Bussiness Name'] }}",
+        "message": "=Hi,  I came across {{ $('Has Website?').item.json['Bussiness Name'] }} and was really impressed!  I help local businesses like yours get more customers through digital marketing.  Would you be open to a quick 10-minute call this week?  Best regards;\nArsal Baig.\nPh no: 33333333333",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -1568,
+        128
+      ],
+      "id": "cae27580-7adc-4e2d-a9b4-41159235db79",
+      "name": "Send Lead Email",
+      "webhookId": "d51e5c58-fa73-4a43-aa95-428470a8940c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "tNcoApFw5YFmhCH7",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1o8C1Df61TdhjSCdycVY85ewi6pP1xA7UCYEzdtiHkdA",
+          "mode": "list",
+          "cachedResultName": "Google Maps Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1o8C1Df61TdhjSCdycVY85ewi6pP1xA7UCYEzdtiHkdA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1o8C1Df61TdhjSCdycVY85ewi6pP1xA7UCYEzdtiHkdA/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Business Name": "={{ $('Edit Fields').item.json['Bussiness Name'] }}",
+            "Address": "={{ $('Edit Fields').item.json.Address }}",
+            "Latitude": "={{ $('Edit Fields').item.json.Latitude }}",
+            "Longitude": "={{ $('Edit Fields').item.json.Longitutde }}",
+            "Rating": "={{ $('Edit Fields').item.json.Rating }}",
+            "Reviews": "={{ $('Edit Fields').item.json.Reviews }}",
+            "Price Level": "={{ $('Edit Fields').item.json['Price Level'] }}",
+            "Type": "={{ $('Edit Fields').item.json.Type }}",
+            "Ph Number": "={{ $('Edit Fields').item.json['Ph Number'] }}",
+            "Website": "={{ $('Edit Fields').item.json.Website }}",
+            "Email Status": "=Email Sent"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Business Name",
+              "displayName": "Business Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Address",
+              "displayName": "Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Latitude",
+              "displayName": "Latitude",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Longitude",
+              "displayName": "Longitude",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Rating",
+              "displayName": "Rating",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Reviews",
+              "displayName": "Reviews",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Price Level",
+              "displayName": "Price Level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Type",
+              "displayName": "Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Ph Number",
+              "displayName": "Ph Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Website",
+              "displayName": "Website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email Status",
+              "displayName": "Email Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1344,
+        128
+      ],
+      "id": "5f5d0dba-e54d-4708-b349-bdac586bbc6c",
+      "name": "Save Lead to Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "35LZVY4ajVNIpgJs",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "=arsalbaig5145@gmail.com",
+        "subject": "Lead Skipped ",
+        "message": "=<h2>Lead was Skipped</h2>\n<p><b>Name:</b> {{ $('Edit Fields').item.json['Bussiness Name'] }} </p>\n<p><b>Address:</b> {{ $('Edit Fields').item.json.Address }} </p>\n<p><b>Phone:</b> {{ $('Edit Fields').item.json['Ph Number'] }} </p>\n<p><b>Rating:</b> {{ $('Edit Fields').item.json.Rating }} </p>\n<p><b>Time:</b> {{ $now }}</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -1568,
+        304
+      ],
+      "id": "01915ac8-56e5-411a-8f12-f73097dd231c",
+      "name": "No Lead Email Found",
+      "webhookId": "a34fcfe8-506d-44d1-8612-370ff5876a8e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "tNcoApFw5YFmhCH7",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1o8C1Df61TdhjSCdycVY85ewi6pP1xA7UCYEzdtiHkdA",
+          "mode": "list",
+          "cachedResultName": "Google Maps Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1o8C1Df61TdhjSCdycVY85ewi6pP1xA7UCYEzdtiHkdA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1o8C1Df61TdhjSCdycVY85ewi6pP1xA7UCYEzdtiHkdA/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Business Name": "={{ $('Edit Fields').item.json['Bussiness Name'] }}",
+            "Address": "={{ $('Edit Fields').item.json.Address }}",
+            "Latitude": "={{ $('Edit Fields').item.json.Latitude }}",
+            "Longitude": "={{ $('Edit Fields').item.json.Longitutde }}",
+            "Rating": "={{ $('Edit Fields').item.json.Rating }}",
+            "Reviews": "={{ $('Edit Fields').item.json.Reviews }}",
+            "Price Level": "={{ $('Edit Fields').item.json['Price Level'] }}",
+            "Type": "={{ $('Edit Fields').item.json.Type }}",
+            "Website": "={{ $('Edit Fields').item.json.Website }}",
+            "Ph Number": "={{ $('Edit Fields').item.json['Ph Number'] }}",
+            "Email Status": "Email Skipped"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Business Name",
+              "displayName": "Business Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Address",
+              "displayName": "Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Latitude",
+              "displayName": "Latitude",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Longitude",
+              "displayName": "Longitude",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Rating",
+              "displayName": "Rating",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reviews",
+              "displayName": "Reviews",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Price Level",
+              "displayName": "Price Level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Type",
+              "displayName": "Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Ph Number",
+              "displayName": "Ph Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Website",
+              "displayName": "Website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Status",
+              "displayName": "Email Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1344,
+        304
+      ],
+      "id": "c70fcca7-da90-4738-8e85-f5539020c979",
+      "name": "Save Skipped to Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "35LZVY4ajVNIpgJs",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "529a1e93-1e04-4561-952e-51553c0c3eb4",
+              "name": "statys",
+              "value": "rejected",
+              "type": "string"
+            },
+            {
+              "id": "a87e6e18-bce1-4d03-b3ad-4feb1a6df0e9",
+              "name": "timestamp",
+              "value": "={{ $now }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1104,
+        -96
+      ],
+      "id": "f84e8126-f326-4713-ae6d-8d6c0eaab088",
+      "name": "Mark as Rejected"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1o8C1Df61TdhjSCdycVY85ewi6pP1xA7UCYEzdtiHkdA",
+          "mode": "list",
+          "cachedResultName": "Google Maps Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1o8C1Df61TdhjSCdycVY85ewi6pP1xA7UCYEzdtiHkdA/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1o8C1Df61TdhjSCdycVY85ewi6pP1xA7UCYEzdtiHkdA/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Business Name": "={{ $('Has Website?').item.json['Bussiness Name'] }}",
+            "Address": "={{ $('Has Website?').item.json.Address }}",
+            "Latitude": "={{ $('Has Website?').item.json.Latitude }}",
+            "Longitude": "={{ $('Has Website?').item.json.Longitutde }}",
+            "Rating": "={{ $('Has Website?').item.json.Rating }}",
+            "Reviews": "={{ $('Has Website?').item.json.Reviews }}",
+            "Price Level": "={{ $('Has Website?').item.json['Price Level'] }}",
+            "Type": "={{ $('Has Website?').item.json.Type }}",
+            "Ph Number": "={{ $('Has Website?').item.json['Ph Number'] }}",
+            "Website": "={{ $('Has Website?').item.json.Website }}",
+            "Email Status": "Email Rejected"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Business Name",
+              "displayName": "Business Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Address",
+              "displayName": "Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Latitude",
+              "displayName": "Latitude",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Longitude",
+              "displayName": "Longitude",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Rating",
+              "displayName": "Rating",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reviews",
+              "displayName": "Reviews",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Price Level",
+              "displayName": "Price Level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Type",
+              "displayName": "Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Ph Number",
+              "displayName": "Ph Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Website",
+              "displayName": "Website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email Status",
+              "displayName": "Email Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -912,
+        -96
+      ],
+      "id": "c48deb37-8191-4dc9-baf2-9b00c3bc1121",
+      "name": "Saved to Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "35LZVY4ajVNIpgJs",
+          "name": "Google Sheets account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Serper API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Has Website?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Serper API": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Website?": {
+      "main": [
+        [
+          {
+            "node": "Scrape Business Website",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark as Rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Business Website": {
+      "main": [
+        [
+          {
+            "node": "Extract Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Emails": {
+      "main": [
+        [
+          {
+            "node": "Email Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Found?": {
+      "main": [
+        [
+          {
+            "node": "Send Lead Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Lead Email Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Lead Email": {
+      "main": [
+        [
+          {
+            "node": "Save Lead to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Lead to Sheet": {
+      "main": [
+        []
+      ]
+    },
+    "No Lead Email Found": {
+      "main": [
+        [
+          {
+            "node": "Save Skipped to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark as Rejected": {
+      "main": [
+        [
+          {
+            "node": "Saved to Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "52aa3f3f-f5ac-42f0-a886-74e10ef865c4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b4ae809003743579456a30588448f269f5e9738029f7fef6ae7921965392c067"
+  },
+  "nodeGroups": [],
+  "id": "znxNfwIrWKZBJdjn",
+  "tags": []
+}
